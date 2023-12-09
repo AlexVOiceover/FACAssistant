@@ -2,30 +2,11 @@
 require('dotenv').config()
 
 // Import necessary classes from discord.js library
-const {
-	Client,
-	Events,
-	GatewayIntentBits,
-	Partials,
-	ChannelType,
-} = require('discord.js')
+const { Client, Events, GatewayIntentBits, Partials } = require('discord.js')
 
 // Initialize OpenAI SDK with API key from .env file
 const openai = new OpenAIApi({
 	apiKey: process.env.OPENAI_API_KEY,
-})
-
-
-//Create thread
-const thread = await openai.beta.threads.create({
-	messages: [
-		{
-			role: 'user',
-			content: 'Just greet the user',
-			//'Create 3 data visualizations based on the trends in this file.',
-			//"file_ids": [file.id]
-		},
-	],
 })
 
 
@@ -41,15 +22,21 @@ const client = new Client({
 	partials: [Partials.Channel],
 })
 
-
+//Create thread
+const thread = await openai.beta.threads.create({
+	messages: [
+		{
+			role: 'user',
+			content: 'Just greet the user',
+			//'Create 3 data visualizations based on the trends in this file.',
+			//"file_ids": [file.id]
+		},
+	],
+})
 
 client.once(Events.ClientReady, (createdClient) => {
 	console.log(`Logged in as ${createdClient.user.tag}`)
-	
 })
-
-
-
 
 async function chatGPT(message, botId) {
 	// User ID as the key for conversation history
@@ -71,15 +58,9 @@ async function chatGPT(message, botId) {
 	message.reply(run)
 }
 
-
-
 client.on(Events.MessageCreate, async (message) => {
 	if (message.author.bot) return
-
-	
 })
-	
-
 
 // Log in to Discord with your client's token
 client.login(process.env.DISCORD_TOKEN)

@@ -1,0 +1,19 @@
+{
+  "name": "facassistant",
+  "version": "1.0.0",
+  "description": "FAC Assistant",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlexVOiceover/FACAssistant.git"
+  },
+  "author": "Lucien Alexander",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AlexVOiceover/FACAssistant/issues"
+  },
+  "homepage": "https://github.com/AlexVOiceover/FACAssistant#readme"
+}
