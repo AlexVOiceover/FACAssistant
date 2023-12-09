@@ -1,83 +1,111 @@
-// Load environment variables from .env file
+const { Client, GatewayIntentBits } = require('discord.js')
+const { OpenAI } = require('openai')
 require('dotenv').config()
 
-// Import necessary classes from discord.js library
-const { Client, Events, GatewayIntentBits, Partials } = require('discord.js')
-
-// Import OpenAI
-const OpenAIApi = require('openai')
-
-// Initialize OpenAI SDK with API key from .env file
-const openai = new OpenAIApi({
+const openai = new OpenAI({
 	apiKey: process.env.OPENAI_API_KEY,
 })
 
-// Create a new client instance
+// Discord Client
 const client = new Client({
 	intents: [
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.GuildMessages,
-		GatewayIntentBits.GuildMembers,
-		GatewayIntentBits.DirectMessages,
 		GatewayIntentBits.MessageContent,
 	],
-	partials: [Partials.Channel],
 })
 
-// Stores relationship between discord threads and OpenAI threads
+const sleep = (ms) => {
+	return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// When discord bot has started up
+client.once('ready', () => {
+	console.log('Bot is ready!')
+})
+
 const threadMap = {}
 
-const getOpenAIThreadId = (discordThreadID) => {
-	//Replace this for database
-	return threadMap[discordThreadID]
+const getOpenAiThreadId = (discordThreadId) => {
+	// Replace this in-memory implementation with a database (e.g. DynamoDB, Firestore, Redis)
+	return threadMap[discordThreadId]
 }
 
-const addThreadToMap = (disscordThreadId, openAiThreadId) => {
-	//replace with database
-	threadMap[discordThreadID] = openAiThreadId
+const addThreadToMap = (discordThreadId, openAiThreadId) => {
+	threadMap[discordThreadId] = openAiThreadId
 }
-// //Create thread
-// const thread = await openai.beta.threads.create({
-// 	messages: [
-// 		{
-// 			role: 'user',
-// 			content: 'Just greet the user',
-// 			//'Create 3 data visualizations based on the trends in this file.',
-// 			//"file_ids": [file.id]
-// 		},
-// 	],
-// })
 
-client.once(Events.ClientReady, (createdClient) => {
-	console.log(`Logged in as ${createdClient.user.tag}`)
+const terminalStates = ['cancelled', 'failed', 'completed', 'expired']
+const statusCheckLoop = async (openAiThreadId, runId) => {
+	const run = await openai.beta.threads.runs.retrieve(openAiThreadId, runId)
+
+	if (terminalStates.indexOf(run.status) < 0) {
+		await sleep(1000)
+		return statusCheckLoop(openAiThreadId, runId)
+	}
+	// console.log(run);
+
+	return run.status
+}
+
+const addMessage = (threadId, content) => {
+	// console.log(content);
+	return openai.beta.threads.messages.create(threadId, {
+		role: 'user',
+		content,
+	})
+}
+
+// This event will run every time a message is received
+client.on('messageCreate', async (message) => {
+	if (message.author.bot || !message.content || message.content === '') return //Ignore bot messages
+	// console.log(message);
+	const discordThreadId = message.channel.id
+	let openAiThreadId = getOpenAiThreadId(discordThreadId)
+
+	let messagesLoaded = false
+	if (!openAiThreadId) {
+		const thread = await openai.beta.threads.create()
+		openAiThreadId = thread.id
+		addThreadToMap(discordThreadId, openAiThreadId)
+		if (message.channel.isThread()) {
+			//Gather all thread messages to fill out the OpenAI thread since we haven't seen this one yet
+			const starterMsg = await message.channel.fetchStarterMessage()
+			const otherMessagesRaw = await message.channel.messages.fetch()
+
+			const otherMessages = Array.from(otherMessagesRaw.values())
+				.map((msg) => msg.content)
+				.reverse() //oldest first
+
+			const messages = [starterMsg.content, ...otherMessages].filter(
+				(msg) => !!msg && msg !== ''
+			)
+
+			// console.log(messages);
+			await Promise.all(messages.map((msg) => addMessage(openAiThreadId, msg)))
+			messagesLoaded = true
+		}
+	}
+
+	// console.log(openAiThreadId);
+	if (!messagesLoaded) {
+		//If this is for a thread, assume msg was loaded via .fetch() earlier
+		await addMessage(openAiThreadId, message.content)
+	}
+
+	const run = await openai.beta.threads.runs.create(openAiThreadId, {
+		assistant_id: process.env.ASSISTANT_ID,
+	})
+	const status = await statusCheckLoop(openAiThreadId, run.id)
+
+	const messages = await openai.beta.threads.messages.list(openAiThreadId)
+	let response = messages.data[0].content[0].text.value
+	response = response.substring(0, 1999) //Discord msg length limit when I was testing
+
+	console.log(response)
+
+	message.reply(response)
 })
 
-client.on(Events.MessageCreate, async (message) => {
-	if (message.author.bot) return
-	console.log(message.channel.id)
-	const discordThread = message.channel.id
-	console.log('helllo')
-})
-
-// async function chatGPT(message, botId) {
-// 	// User ID as the key for conversation history
-// 	//const userId = message.author.id
-
-// 	let query = message.content
-
-// 	// Check if the message starts with "!ask"
-// 	if (query.startsWith('!ask ')) {
-// 		query = message.content.replace('!ask ', '').trim()
-// 		// Combine the system message content with the query from the user
-// 	}
-
-// 	//Linkage between assistant and thread
-// 	const run = await openai.beta.threads.runs.create(thread.id, {
-// 		assistant_id: assistant.id,
-// 	})
-
-// 	message.reply(run)
-// }
-
-// Log in to Discord with your client's token
+// Authenticate Discord
 client.login(process.env.DISCORD_TOKEN)
