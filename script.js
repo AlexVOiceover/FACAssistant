@@ -9,7 +9,6 @@ const openai = new OpenAIApi({
 	apiKey: process.env.OPENAI_API_KEY,
 })
 
-
 // Create a new client instance
 const client = new Client({
 	intents: [
@@ -38,6 +37,10 @@ client.once(Events.ClientReady, (createdClient) => {
 	console.log(`Logged in as ${createdClient.user.tag}`)
 })
 
+client.on(Events.MessageCreate, async (message) => {
+	if (message.author.bot) return
+})
+
 async function chatGPT(message, botId) {
 	// User ID as the key for conversation history
 	//const userId = message.author.id
@@ -57,10 +60,6 @@ async function chatGPT(message, botId) {
 
 	message.reply(run)
 }
-
-client.on(Events.MessageCreate, async (message) => {
-	if (message.author.bot) return
-})
 
 // Log in to Discord with your client's token
 client.login(process.env.DISCORD_TOKEN)
