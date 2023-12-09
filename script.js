@@ -24,6 +24,17 @@ const client = new Client({
 	partials: [Partials.Channel],
 })
 
+// Stores relationship between discord threads and OpenAI threads
+const threadMap = {}
+
+const getOpenAIThreadId = (discordThreadID) => {
+	//Replace this for database
+	return threadMap[discordThreadID]
+}
+
+const addThreadToMap = (disscordThreadId, openAiThreadId) => {
+	threadMap[discordThreadID] = openAiThreadId
+}
 // //Create thread
 // const thread = await openai.beta.threads.create({
 // 	messages: [
@@ -42,7 +53,8 @@ client.once(Events.ClientReady, (createdClient) => {
 
 client.on(Events.MessageCreate, async (message) => {
 	if (message.author.bot) return
-	message.reply('hello')
+	console.log(message.channel.id)
+	console.log('helllo')
 })
 
 // async function chatGPT(message, botId) {
