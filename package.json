@@ -1,22 +1,26 @@
 {
-  "name": "facassistant",
-  "version": "1.0.0",
-  "description": "FAC Assistant",
-  "main": "script.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/AlexVOiceover/FACAssistant.git"
-  },
-  "author": "Lucien Alexander",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/AlexVOiceover/FACAssistant/issues"
-  },
-  "homepage": "https://github.com/AlexVOiceover/FACAssistant#readme",
-  "dependencies": {
-    "nodemon": "^3.0.2"
-  }
+	"name": "facassistant",
+	"version": "1.0.0",
+	"description": "FAC Assistant",
+	"main": "script.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "nodemon script.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/AlexVOiceover/FACAssistant.git"
+	},
+	"author": "Lucien Alexander",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/AlexVOiceover/FACAssistant/issues"
+	},
+	"homepage": "https://github.com/AlexVOiceover/FACAssistant#readme",
+	"dependencies": {
+		"discord.js": "^14.14.1",
+		"dotenv": "^16.3.1",
+		"nodemon": "^3.0.1",
+		"openai": "^4.20.1"
+	}
 }
