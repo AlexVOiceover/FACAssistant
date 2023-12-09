@@ -33,6 +33,7 @@ const getOpenAIThreadId = (discordThreadID) => {
 }
 
 const addThreadToMap = (disscordThreadId, openAiThreadId) => {
+	//replace with database
 	threadMap[discordThreadID] = openAiThreadId
 }
 // //Create thread
@@ -54,6 +55,7 @@ client.once(Events.ClientReady, (createdClient) => {
 client.on(Events.MessageCreate, async (message) => {
 	if (message.author.bot) return
 	console.log(message.channel.id)
+	const discordThread = message.channel.id
 	console.log('helllo')
 })
 
